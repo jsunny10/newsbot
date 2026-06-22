@@ -273,9 +273,9 @@ if __name__ == "__main__":
         news = get_google_news_rss(keyword, days_to_fetch)
         all_news.extend(news)
 
-    # 중복 제거
+    # 중복 제거 (유사도 50% 이상이면 중복으로 판단)
     print(f"\n📊 수집된 뉴스: {len(all_news)}개")
-    unique_news = remove_duplicates(all_news, similarity_threshold=0.7)
+    unique_news = remove_duplicates(all_news, similarity_threshold=0.5)
     print(f"✨ 중복 제거 후: {len(unique_news)}개")
 
     # 카테고리별 분류 및 점수 계산
