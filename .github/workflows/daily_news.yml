@@ -1,0 +1,42 @@
+name: Daily News Collector
+
+on:
+  schedule:
+    # 매일 오전 8시 (KST) = UTC 전날 23시
+    - cron: '0 23 * * *'
+  workflow_dispatch:
+  repository_dispatch:
+    types: [collect-news]
+
+jobs:
+  collect-news:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run News Collector
+        run: |
+          python news_collector.py
+
+      - name: Commit and Push JSON Data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/data/
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Add news data for $(date +%Y-%m-%d)"
+            git push
+          fi

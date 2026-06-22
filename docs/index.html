@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Audit News</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Malgun Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            border: 4px solid #001f3f;
+            box-shadow: 0 4px 15px rgba(0,31,63,0.2);
+        }
+        h1 {
+            color: #001f3f;
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .main-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        .calendar-section {
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+        .calendar-selector {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px solid #001f3f;
+            box-shadow: 0 2px 8px rgba(0,31,63,0.1);
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .calendar-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #001f3f;
+        }
+        .calendar-nav {
+            display: flex;
+            gap: 5px;
+        }
+        .calendar-nav button {
+            background: white;
+            border: 2px solid #001f3f;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #001f3f;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .calendar-nav button:hover {
+            background: #001f3f;
+            color: white;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+        .calendar-day-header {
+            text-align: center;
+            font-weight: bold;
+            color: #001f3f;
+            padding: 8px 0;
+            font-size: 11px;
+        }
+        .calendar-day-header.sunday {
+            color: #dc3545;
+        }
+        .calendar-day-header.saturday {
+            color: #0066cc;
+        }
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 12px;
+            color: #7f8c8d;
+            position: relative;
+            border: 1px solid #e0e0e0;
+        }
+        .calendar-day:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .calendar-day.has-data {
+            background: #001f3f;
+            color: white;
+            font-weight: bold;
+            border: 2px solid #001f3f;
+        }
+        .calendar-day.has-data::after {
+            content: '•';
+            position: absolute;
+            bottom: 2px;
+            font-size: 14px;
+            color: #ffd700;
+        }
+        .calendar-day.selected {
+            background: #ff6b6b;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(255,107,107,0.4);
+        }
+        .calendar-day.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .calendar-day.disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        .content-section {
+            min-height: 500px;
+        }
+        .category {
+            margin: 20px 0;
+            border-radius: 12px;
+            border: 2px solid #001f3f;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,31,63,0.1);
+        }
+        .category-header {
+            padding: 20px;
+            background: #001f3f;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        .category-header:hover {
+            background: #003366;
+        }
+        .category-title {
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .category-count {
+            background: white;
+            color: #001f3f;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+        .category-toggle {
+            font-size: 20px;
+            transition: transform 0.3s;
+        }
+        .category-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+        .category-content {
+            padding: 20px;
+            background: #f8f9fa;
+            max-height: 2000px;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.4s ease;
+        }
+        .category-content.collapsed {
+            max-height: 0;
+            padding: 0 20px;
+        }
+        .news-item {
+            margin: 15px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .news-item:hover {
+            box-shadow: 0 8px 25px rgba(0,31,63,0.3);
+            transform: translateY(-3px);
+            border-color: #001f3f;
+        }
+        .news-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .news-source {
+            background: #001f3f;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .news-score {
+            display: inline-flex;
+            align-items: center;
+            background: #667eea;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .news-keywords {
+            display: inline-block;
+            background: #ffe6e6;
+            color: #e67e22;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+        .news-title {
+            display: block;
+            margin-top: 10px;
+            color: #2c3e50;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+        .news-title:hover {
+            color: #001f3f;
+            text-decoration: underline;
+        }
+        .news-desc {
+            margin-top: 10px;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #7f8c8d;
+            font-size: 18px;
+        }
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s infinite;
+        }
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+        .error {
+            padding: 25px;
+            background: #ffe6e6;
+            border-left: 5px solid #e74c3c;
+            color: #c0392b;
+            border-radius: 10px;
+            font-size: 15px;
+        }
+        .no-data {
+            text-align: center;
+            padding: 60px;
+            color: #95a5a6;
+            font-size: 18px;
+        }
+        .update-time {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 12px;
+            margin-top: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            .calendar-section {
+                position: relative;
+                top: 0;
+            }
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 22px;
+            }
+            .calendar-grid {
+                gap: 3px;
+            }
+            .calendar-day {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📰 금융감사 뉴스 리포트</h1>
+
+        <div class="main-layout">
+            <div class="calendar-section">
+                <div class="calendar-selector">
+                    <div class="calendar-header">
+                        <div class="calendar-title" id="calendarTitle">2026년 6월</div>
+                        <div class="calendar-nav">
+                            <button onclick="changeMonth(-1)">◀</button>
+                            <button onclick="changeMonth(1)">▶</button>
+                        </div>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- JavaScript로 렌더링 -->
+                    </div>
+                </div>
+                <div class="update-time" id="updateTime"></div>
+            </div>
+
+            <div class="content-section">
+                <div id="content">
+                    <div class="loading">데이터를 불러오는 중</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let dates = [];
+        let currentDate = new Date();
+        let selectedDate = null;
+
+        async function loadDates() {
+            try {
+                const response = await fetch('data/index.json');
+                dates = await response.json();
+
+                if (dates.length > 0) {
+                    selectedDate = dates[0];
+                    renderCalendar();
+                    loadNews(selectedDate);
+                } else {
+                    document.getElementById('content').innerHTML =
+                        '<div class="no-data">📭 아직 수집된 뉴스가 없습니다.</div>';
+                }
+            } catch (error) {
+                document.getElementById('content').innerHTML =
+                    '<div class="error">❌ 날짜 목록을 불러오는데 실패했습니다.</div>';
+            }
+        }
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            document.getElementById('calendarTitle').textContent =
+                `${year}년 ${month + 1}월`;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const lastDate = new Date(year, month + 1, 0).getDate();
+
+            let calendarHTML = '';
+
+            const dayHeaders = ['일', '월', '화', '수', '목', '금', '토'];
+            const dayClasses = ['sunday', '', '', '', '', 'saturday', ''];
+            dayHeaders.forEach((day, idx) => {
+                calendarHTML += `<div class="calendar-day-header ${dayClasses[idx]}">${day}</div>`;
+            });
+
+            for (let i = 0; i < firstDay; i++) {
+                calendarHTML += '<div class="calendar-day disabled"></div>';
+            }
+
+            for (let day = 1; day <= lastDate; day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const hasData = dates.includes(dateStr);
+                const isSelected = dateStr === selectedDate;
+
+                let classes = 'calendar-day';
+                if (hasData) classes += ' has-data';
+                if (isSelected) classes += ' selected';
+                if (!hasData) classes += ' disabled';
+
+                calendarHTML += `
+                    <div class="${classes}" onclick="selectDate('${dateStr}', ${hasData})">
+                        ${day}
+                    </div>`;
+            }
+
+            document.getElementById('calendarGrid').innerHTML = calendarHTML;
+        }
+
+        function changeMonth(delta) {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            renderCalendar();
+        }
+
+        function selectDate(dateStr, hasData) {
+            if (!hasData) return;
+            selectedDate = dateStr;
+            renderCalendar();
+            loadNews(dateStr);
+        }
+
+        function toggleCategory(categoryId) {
+            const content = document.getElementById(`content-${categoryId}`);
+            const toggle = document.getElementById(`toggle-${categoryId}`);
+
+            content.classList.toggle('collapsed');
+            toggle.classList.toggle('collapsed');
+        }
+
+        async function loadNews(date) {
+            document.getElementById('content').innerHTML =
+                '<div class="loading">데이터를 불러오는 중</div>';
+
+            try {
+                const response = await fetch(`data/${date}.json`);
+                const data = await response.json();
+
+                document.getElementById('updateTime').innerHTML =
+                    `📅 <strong>${date}</strong><br>마지막 업데이트: ${new Date().toLocaleString('ko-KR')}`;
+
+                let html = '';
+
+                if (Object.keys(data).length === 0) {
+                    html = '<div class="no-data">😔 해당 날짜의 뉴스가 없습니다.</div>';
+                } else {
+                    let categoryIdx = 0;
+                    for (const [category, newsList] of Object.entries(data)) {
+                        html += `
+                            <div class="category">
+                                <div class="category-header" onclick="toggleCategory(${categoryIdx})">
+                                    <div class="category-title">
+                                        ${category}
+                                        <span class="category-count">${newsList.length}건</span>
+                                    </div>
+                                    <div class="category-toggle" id="toggle-${categoryIdx}">▼</div>
+                                </div>
+                                <div class="category-content" id="content-${categoryIdx}">`;
+
+                        newsList.forEach(news => {
+                            const keywords = news.matched_keywords ?
+                                news.matched_keywords.join(', ') : '';
+                            const source = news.source || '기타';
+
+                            html += `
+                                <div class="news-item">
+                                    <div class="news-meta">
+                                        <span class="news-source">${source}</span>
+                                        <span class="news-score">⭐ ${news.score}점</span>
+                                        ${keywords ? `<span class="news-keywords">🏷️ ${keywords}</span>` : ''}
+                                    </div>
+                                    <a href="${news.link}" target="_blank" class="news-title">
+                                        ${news.title}
+                                    </a>
+                                    ${news.desc ? `<div class="news-desc">${news.desc}</div>` : ''}
+                                </div>`;
+                        });
+
+                        html += '</div></div>';
+                        categoryIdx++;
+                    }
+                }
+
+                document.getElementById('content').innerHTML = html;
+            } catch (error) {
+                document.getElementById('content').innerHTML =
+                    '<div class="error">❌ 뉴스 데이터를 불러오는데 실패했습니다.</div>';
+            }
+        }
+
+        loadDates();
+    </script>
+</body>
+</html>
